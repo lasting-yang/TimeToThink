@@ -24,8 +24,6 @@ npm run tauri:dev
 
 ## Screenshots
 
-### Main Timer
-![Main Timer](images/main.png)
+![Main](images/main.png)
 
-### Break Guard
-![Break Guard](images/break.png)
+![Break](images/break.png)
