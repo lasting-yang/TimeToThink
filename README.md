@@ -1,13 +1,13 @@
 # TimeToThink
 
-A macOS-only Pomodoro timer application that enforces break periods through system lock screen integration.
+A macOS-only Pomodoro timer application that enforces break periods through fullscreen overlay.
 
 ## Features
 
 - **25-minute Focus sessions** with automatic transitions to breaks
-- **Forced 5-minute breaks** - lock screen triggers to ensure you rest
+- **Forced 5-minute breaks** - fullscreen guard prevents you from skipping breaks
 - **Long breaks** - every 3rd pomodoro triggers a 25-minute extended break
-- **Fullscreen break guard** - prevents skipping breaks without confirmation
+- **Break guard** - fullscreen overlay with skip confirmation
 - **Crash recovery** - state persists across app restarts
 
 ## Tech Stack
@@ -24,6 +24,6 @@ npm run tauri:dev
 
 ## Requirements
 
-- macOS (required for lock screen integration)
+- macOS
 - Node.js 18+
 - Rust toolchain

@@ -1,11 +1,9 @@
 use crate::types::{TimerState, TimerUpdate};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 use tokio::sync::Mutex;
 use tokio::time::interval;
-
-const LOCK_DELAY_SECONDS: u32 = 5;
 const TEST_MODE_ENV: &str = "TTT_TEST_MODE";
 const TEST_FOCUS_SECONDS: u32 = 10;
 const TEST_SHORT_BREAK_SECONDS: u32 = 8;
@@ -58,9 +56,7 @@ pub struct TimerEngine {
     state: TimerState,
     remaining_seconds: u32,
     completed_pomodoros: u32,
-    lock_triggered: bool,
     is_running: bool,
-    break_start_time: Option<SystemTime>,
     durations: TimerDurations,
 }
 
@@ -71,9 +67,7 @@ impl TimerEngine {
             state: TimerState::Focus,
             remaining_seconds: durations.for_state(TimerState::Focus),
             completed_pomodoros: 0,
-            lock_triggered: false,
             is_running: false,
-            break_start_time: None,
             durations,
         }
     }
@@ -152,20 +146,6 @@ impl TimerEngine {
             println!("Timer tick: state={:?}, remaining={}, running={}",
                 self.state, self.remaining_seconds, self.is_running);
 
-            // Check if we need to trigger lock screen (first 5 seconds of break)
-            if self.state.is_break() && !self.lock_triggered {
-                if let Some(start_time) = self.break_start_time {
-                    let elapsed = start_time
-                        .elapsed()
-                        .map_err(|e| format!("Timer error: {}", e))?;
-
-                    if elapsed.as_secs() >= LOCK_DELAY_SECONDS as u64 {
-                        self.trigger_lock_screen(app).await?;
-                        self.lock_triggered = true;
-                    }
-                }
-            }
-
             self.emit_update(app)?;
         } else {
             self.transition_next_state(app).await?;
@@ -197,10 +177,10 @@ impl TimerEngine {
             TimerState::ShortBreak
         };
 
+        println!("[TimerEngine] Transitioning to break: {:?}", next_break);
+
         self.state = next_break;
         self.remaining_seconds = self.durations.for_state(next_break);
-        self.lock_triggered = false;
-        self.break_start_time = Some(SystemTime::now());
 
         // Show guard window
         app.emit("show_guard", ())?;
@@ -211,22 +191,13 @@ impl TimerEngine {
     fn transition_to_focus(&mut self) {
         self.state = TimerState::Focus;
         self.remaining_seconds = self.durations.for_state(TimerState::Focus);
-        self.lock_triggered = false;
-        self.break_start_time = None;
     }
 
     fn reset_to_focus(&mut self) {
         self.state = TimerState::Focus;
         self.remaining_seconds = self.durations.for_state(TimerState::Focus);
         self.completed_pomodoros = 0;
-        self.lock_triggered = false;
-        self.break_start_time = None;
         self.is_running = false;
-    }
-
-    async fn trigger_lock_screen(&self, app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-        app.emit("lock_screen", ())?;
-        Ok(())
     }
 
     pub fn emit_update(&self, app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {

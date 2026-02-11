@@ -1,12 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod guard_control;
-mod macos_lock;
 mod timer_engine;
 mod types;
 
 use guard_control::{hide_guard, show_guard, start_guard_polling};
-use macos_lock::lock_screen;
 use std::sync::Arc;
 use tauri::image::Image;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -120,13 +118,6 @@ fn main() {
 
             // Store engine in app state
             app.manage(engine.clone());
-
-            // Listen for lock_screen event from timer engine
-            app.listen("lock_screen", move |_| {
-                if let Err(e) = lock_screen() {
-                    eprintln!("Lock screen error: {}", e);
-                }
-            });
 
             // Listen for show_guard event from timer engine
             let app_handle_for_guard = app.handle().clone();
