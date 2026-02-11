@@ -21,3 +21,11 @@ npm run tauri:dev
 - macOS
 - Node.js 18+
 - Rust toolchain
+
+## Screenshots
+
+### Main Timer
+![Main Timer](images/main.png)
+
+### Break Guard
+![Break Guard](images/break.png)
