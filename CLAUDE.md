@@ -2,11 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+## 🤝 交互规则（MANDATORY）
+
+> [!IMPORTANT]
+> **这些规则必须严格遵守！**
+
+1. **称呼规则**: 每次回复前必须使用"Yang"作为称呼
+2. **决策确认**: 遇到不确定的代码设计问题时，必须先询问 Yang，不得直接行动
+3. **代码兼容性**: 不能写兼容性代码，除非 Yang 主动要求。
+4. 当我需要库/API 文档、代码生成、设置或配置步骤，而无需我明确提出要求时，我总是使用 Context7 MCP。
+---
+
 ## 项目概述
 
 **TimeToThink** 是一个仅限 macOS 的番茄钟应用，使用 Tauri（Rust 后端 + JavaScript/TypeScript 前端）构建。应用通过系统锁屏集成和全屏遮罩来强制执行休息期间，防止用户跳过休息。
 
-**当前状态**: 规划阶段 - 完整规格说明见 TODO.md。目前尚未编写任何代码。
 
 ## 核心架构
 
