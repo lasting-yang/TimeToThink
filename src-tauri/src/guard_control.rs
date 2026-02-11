@@ -57,15 +57,12 @@ fn stretch_guard_to_monitor(app: &AppHandle, guard_window: &WebviewWindow) -> Re
 
     #[cfg(target_os = "macos")]
     {
-        // Important: simple fullscreen keeps macOS menu bar behavior; disable it.
+        // Keep guard in a borderless, monitor-sized window.
+        // Avoid toggling macOS native fullscreen to prevent style-mask transition crashes.
         let _ = guard_window.set_simple_fullscreen(false);
         guard_window
             .set_visible_on_all_workspaces(true)
             .map_err(|e| e.to_string())?;
-    }
-
-    if let Err(e) = guard_window.set_fullscreen(true) {
-        eprintln!("native fullscreen failed: {}", e);
     }
 
     Ok(())
@@ -109,8 +106,12 @@ pub async fn show_guard(app: &AppHandle) -> Result<(), String> {
 
 pub async fn hide_guard(app: &AppHandle) -> Result<(), String> {
     if let Some(guard_window) = app.get_webview_window("breakguard") {
-        let _ = guard_window.set_fullscreen(false);
-        guard_window.close().map_err(|e| e.to_string())?;
+        let _ = guard_window.set_always_on_top(false);
+        #[cfg(target_os = "macos")]
+        {
+            let _ = guard_window.set_visible_on_all_workspaces(false);
+        }
+        guard_window.hide().map_err(|e| e.to_string())?;
     }
 
     #[cfg(target_os = "macos")]
@@ -148,14 +149,10 @@ pub async fn start_guard_polling(app: AppHandle, engine: crate::timer_engine::Sh
                 eprintln!("Guard polling error: {}", e);
             }
         } else if let Some(guard_window) = app.get_webview_window("breakguard") {
-            match guard_window.is_visible() {
-                Ok(true) => {
-                    if let Err(e) = hide_guard(&app).await {
-                        eprintln!("Guard hide polling error: {}", e);
-                    }
+            if let Ok(true) = guard_window.is_visible() {
+                if let Err(e) = hide_guard(&app).await {
+                    eprintln!("Guard hide polling error: {}", e);
                 }
-                Ok(false) => {}
-                Err(e) => eprintln!("Guard visibility polling error: {}", e),
             }
         }
     }

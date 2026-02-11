@@ -10,6 +10,8 @@ import SkipConfirmDialog from './components/SkipConfirmDialog.vue';
 const currentView = ref<'main' | 'guard'>('main');
 const showSkipConfirm = ref(false);
 let unlistenFocusChanged: (() => void) | null = null;
+let unlistenShowGuard: (() => void) | null = null;
+let unlistenTimerUpdate: (() => void) | null = null;
 
 onMounted(async () => {
   // Check which window we're in
@@ -36,30 +38,28 @@ onMounted(async () => {
   }
 
   // Listen for show_guard event (handled by Rust, but we can update UI state if needed)
-  await listen('show_guard', () => {
+  unlistenShowGuard = await listen('show_guard', () => {
     // Guard window will be shown by Rust
     console.log('show_guard event received');
   });
 
   // Listen for timer update events
-  await listen('timer_update', (event: any) => {
+  unlistenTimerUpdate = await listen('timer_update', (event: any) => {
     // Event payload contains: state, remaining_seconds, completed_pomodoros
     // This will be handled by individual components
     console.log('timer_update:', event.payload);
-
-    // Fallback: if we're in breakguard window and state returns to Focus,
-    // hide this window to avoid stale/black overlay.
-    if (currentLabel === 'breakguard' && event.payload?.state === 'Focus') {
-      currentWindow.hide().catch((error) => {
-        console.error('Failed to hide breakguard window:', error);
-      });
-    }
   });
 });
 
 onUnmounted(() => {
   if (unlistenFocusChanged) {
     unlistenFocusChanged();
+  }
+  if (unlistenShowGuard) {
+    unlistenShowGuard();
+  }
+  if (unlistenTimerUpdate) {
+    unlistenTimerUpdate();
   }
 });
 
